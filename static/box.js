@@ -1,9 +1,14 @@
 class Square {
+    static getHandleSize() {
+        return 10;
+    }
+
     constructor(x, y, width, height) {
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
+        this.handleSize = Square.getHandleSize();
 
         this.isDragging = false;
         this.isResizing = false;
@@ -23,22 +28,20 @@ class Square {
         ctx.strokeStyle = 'black';
 
         // Draw the resize handle
-        let handleSize = 10;
-        let handleX = this.x + this.width - handleSize;
-        let handleY = this.y + this.height - handleSize;
+        let handleX = this.x + this.width - this.handleSize;
+        let handleY = this.y + this.height - this.handleSize;
         ctx.fillStyle = 'white';
-        ctx.fillRect(handleX, handleY, handleSize, handleSize);
+        ctx.fillRect(handleX, handleY, this.handleSize, this.handleSize);
         ctx.strokeStyle = 'black';
-        ctx.strokeRect(handleX, handleY, handleSize, handleSize);
+        ctx.strokeRect(handleX, handleY, this.handleSize, this.handleSize);
     }
 
 
     // Check if the mouse is over the resize handle
     isOverResizeHandle(x, y) {
-        let handleSize = 10;
-        let handleX = this.x + this.width - handleSize;
-        let handleY = this.y + this.height - handleSize;
-        return x >= handleX && x <= handleX + handleSize &&
-            y >= handleY && y <= handleY + handleSize;
+        let handleX = this.x + this.width - this.handleSize;
+        let handleY = this.y + this.height - this.handleSize;
+        return x >= handleX && x <= handleX + this.handleSize &&
+            y >= handleY && y <= handleY + this.handleSize;
     }
 }
