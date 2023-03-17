@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Flask Canvas App</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+    <script src="{{ url_for('static', filename='box.js') }}"></script>
+</head>
+
+<body>
+    <canvas id="myCanvas" width="{{ bg_width }}" height="{{ bg_height }}"></canvas>
+    <script>
+        // Load the background image onto the canvas
+        var canvas = document.getElementById('myCanvas');
+        var ctx = canvas.getContext('2d');
+        var img = new Image();
+
+        const update = () => {
+            ctx.clearRect(0, 0, 500, 500);
+            box.update(ctx);
+        };
+
+        let squares = [];
+        img.src = "{{ url_for('static', filename=img_filename) }}";
+        img.onload = function () {
+            let square = new Square(50, 50, 100, 100);
+            squares.push(square);
+
+            // Draw the square for the first time
+            square.draw(canvas, ctx, img, true);
+        };
+
+
+        // Handle mouse events
+        canvas.addEventListener('mousedown', function (event) {
+            var mouseX = event.clientX - canvas.offsetLeft;
+            var mouseY = event.clientY - canvas.offsetTop;
+
+            squares.forEach((square, i) => {
+                // Check if the mouse is over the resize handle
+                if (square.isOverResizeHandle(mouseX, mouseY)) {
+                    square.isResizing = true;
+                    resizeHandle = {
+                        x: mouseX,
+                        y: mouseY,
+                        width: square.width,
+                        height: square.height
+                    }
+                }
+                // Check if the mouse is over the square
+                else if (mouseX >= square.x && mouseX <= square.x + square.width &&
+                        mouseY >= square.y && mouseY <= square.y + square.height) {
+                        square.isDragging = true;
+                        lastX = mouseX;
+                        lastY = mouseY;
+                    }
+                });
+        });
+
+
+        canvas.addEventListener('mousemove', function (event) {
+            let mouseX = event.clientX - canvas.offsetLeft;
+            let mouseY = event.clientY - canvas.offsetTop;
+
+            let shoudRedraw = false
+            squares.forEach(square => {
+                // Resize the square
+                if (square.isResizing) {
+                    let deltaX = mouseX - resizeHandle.x;
+                    let deltaY = mouseY - resizeHandle.y;
+                    square.width = resizeHandle.width + deltaX;
+                    square.height = resizeHandle.height + deltaY;
+                    shouldRedraw = true;
+                }
+
+                // Move the square
+                else if (square.isDragging) {
+                    var deltaX = mouseX - lastX;
+                    var deltaY = mouseY - lastY;
+                    square.x += deltaX;
+                    square.y += deltaY;
+                    lastX = mouseX;
+                    lastY = mouseY;
+                    shouldRedraw = true;
+                }
+            });
+            squares.forEach((square, i) => square.draw(canvas, ctx, img, i == 0))
+        });
+
+        canvas.addEventListener('mouseup', function (event) {
+            squares.forEach(square => {
+                square.isDragging = false;
+                square.isResizing = false;
+                square.resizeHandle = null;
+            })
+        });
+
+
+    </script>
+</body>
