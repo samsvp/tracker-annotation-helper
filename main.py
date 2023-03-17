@@ -18,6 +18,7 @@ class ExampleApp(Frame):
         self.canvas.bind("<ButtonRelease-1>", self.on_button_release)
 
         self.rect = None
+        self.rects = []
 
         self.start_x = None
         self.start_y = None
@@ -40,8 +41,11 @@ class ExampleApp(Frame):
         self.start_y = self.canvas.canvasy(event.y)
 
         # create rectangle if not yet exist
-        if not self.rect:
-            self.rect = self.canvas.create_rectangle(self.x, self.y, 1, 1, outline='red')
+        rect = self.canvas.create_rectangle(self.x, self.y, 1, 1, 
+                                            outline='red', activefill='#ffaaaa', 
+                                            stipple="gray25")
+        self.rects.append(rect)
+        self.rect = rect
 
 
     def on_move_press(self, event):
@@ -63,8 +67,7 @@ class ExampleApp(Frame):
 
 
     def on_button_release(self, event):
-        print(self.start_x, self.start_y, self.curX, self.curY)
-        pass    
+        print(self.start_x, self.start_y, self.curX, self.curY)    
 
 
     def resize_image(self, event):
