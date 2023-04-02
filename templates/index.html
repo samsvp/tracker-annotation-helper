@@ -3,111 +3,74 @@
 
 <head>
     <title>Flask Canvas App</title>
+    <style></style>
     <style>
         canvas {
             border: 1px solid black;
         }
     </style>
-    <script src="{{ url_for('static', filename='box.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/box.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/helpers.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
 <body>
+    <div id="sidebar">
+        <button id="export-mot"> MOT </button> <br><br>
+        <button id="next-image"> Next </button> <br><br>
+        <button id="prev-image"> Prev </button> <br><br>
+    </div>
     <canvas id="myCanvas" width="{{ bg_width }}" height="{{ bg_height }}"></canvas>
+
     <script>
         // Load the background image onto the canvas
         var canvas = document.getElementById('myCanvas');
+        canvas.tabIndex = 1000; // force canvas to listen to keyboard events
         var ctx = canvas.getContext('2d');
         var img = new Image();
+        let mouseX, mouseY;
+        let frame = 1;
 
-        let squares = [];
-        img.src = "{{ url_for('static', filename=img_filename) }}";
-        img.onload = function () {
-            ctx.drawImage(img, 0, 0);
-        };
+        let squares = { [frame]: [] };
+        fetch("/get_image", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ frame: frame })
+        })
+            .then(res => res.blob()
+                .then(imageBlob => {
+                    const imageUrl = URL.createObjectURL(imageBlob);
+                    img.src = imageUrl;
+                    img.onload = function () {
+                        ctx.drawImage(img, 0, 0);
+                    };
+                })
+                .catch(err => console.log(err)))
+        .catch(err => console.log(err));
 
-        // Handle mouse events
-        canvas.addEventListener('mousedown', function (event) {
-            let mouseX = event.clientX - canvas.offsetLeft;
-            let mouseY = event.clientY - canvas.offsetTop;
 
-            let shouldCreateNewSquare = true;
+        const exportButton = document.querySelector('#export-mot');
+        exportButton.addEventListener('click', () => {
+            exportToMOT("mot.txt");
+        });
 
-            squares.forEach((square, i) => {
-                // Check if the mouse is over the resize handle
-                if (square.isOverResizeHandle(mouseX, mouseY)) {
-                    square.isResizing = true;
-                    resizeHandle = {
-                        x: mouseX,
-                        y: mouseY,
-                        width: square.width,
-                        height: square.height
-                    }
-                    shouldCreateNewSquare = false;
-                }
-                // Check if the mouse is over the square
-                else if (mouseX >= square.x && mouseX <= square.x + square.width &&
-                    mouseY >= square.y && mouseY <= square.y + square.height) {
-                    square.isDragging = true;
-                    lastX = mouseX;
-                    lastY = mouseY;
-                    shouldCreateNewSquare = false;
-                }
-            });
-
-            if (shouldCreateNewSquare) {
-                let square = new Square(mouseX, mouseY, Square.getHandleSize(), Square.getHandleSize());
-                squares.push(square);
-                square.isResizing = true;
-                resizeHandle = {
-                    x: mouseX,
-                    y: mouseY,
-                    width: square.width,
-                    height: square.height
-                }
+        const nextImageButton = document.querySelector('#next-image');
+        nextImageButton.addEventListener('click', () => {
+            if (!(++frame in squares)) {
+                squares[frame] = [];
             }
+            loadImage("next");
         });
 
 
-        canvas.addEventListener('mousemove', function (event) {
-            let mouseX = event.clientX - canvas.offsetLeft;
-            let mouseY = event.clientY - canvas.offsetTop;
-
-            let shouldRedraw = false
-            squares.forEach(square => {
-                // Resize the square
-                if (square.isResizing) {
-                    let deltaX = mouseX - resizeHandle.x;
-                    let deltaY = mouseY - resizeHandle.y;
-                    square.width = resizeHandle.width + deltaX;
-                    square.height = resizeHandle.height + deltaY;
-                    shouldRedraw = true;
-                }
-
-                // Move the square
-                else if (square.isDragging) {
-                    var deltaX = mouseX - lastX;
-                    var deltaY = mouseY - lastY;
-                    square.x += deltaX;
-                    square.y += deltaY;
-                    lastX = mouseX;
-                    lastY = mouseY;
-                    shouldRedraw = true;
-                }
-            });
-
-            if (shouldRedraw)
-                squares.forEach((square, i) => square.draw(canvas, ctx, img, i == 0));
+        const prevImageButton = document.querySelector('#prev-image');
+        prevImageButton.addEventListener('click', () => {
+            if (!(--frame in squares)) {
+                squares[frame] = [];
+            }
+            loadImage("prev");
         });
-
-
-        canvas.addEventListener('mouseup', function (event) {
-            squares.forEach(square => {
-                square.isDragging = false;
-                square.isResizing = false;
-                square.resizeHandle = null;
-            })
-        });
-
 
     </script>
+    <script src="{{ url_for('static', filename='js/canvas-listeners.js') }}"></script>
 </body>
