@@ -50,7 +50,7 @@ canvas.addEventListener('mouseup', function (event) {
                     break;
                 }
             }
-            square.number = number;
+            square.setNumber(number);
             drawSquares();
         }
 

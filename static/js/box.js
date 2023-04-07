@@ -23,7 +23,7 @@ class Square {
         this.width = width;
         this.height = height;
         this.handleSize = Square.getHandleSize();
-        this.number = parseInt(number) ?? -1;
+        this.number = number === undefined ? -1 : parseInt(number);
         this.color = Square.getRandomColor(this.number);
 
         this.isDragging = false;
