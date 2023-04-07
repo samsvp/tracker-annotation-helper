@@ -1,3 +1,23 @@
+function getFrameData() {
+    fetch('/get_current_frame_data')
+        .then(res => res.json()
+            .then(json => {
+                frame = json.frame;
+                if (!(frame in squares)) {
+                    squares[frame] = json.squares.map(
+                        s => {
+                            return new Square(s.bb_left, s.bb_top, 
+                                s.bb_width, s.bb_height,
+                                s.id)
+                        });
+                }
+                drawSquares();
+            })
+            .catch(err => console.log(err)))
+        .catch(err => console.log(err));
+}
+
+
 function loadImage(nextOrPrev) {
     fetch(`/${nextOrPrev}_image`)
         .then(
@@ -5,7 +25,7 @@ function loadImage(nextOrPrev) {
                 .then(imageBlob => {
                     const imageUrl = URL.createObjectURL(imageBlob);
                     img.src = imageUrl;
-                    img.onload = drawSquares;
+                    img.onload = getFrameData;
                 })
                 .catch(err => console.log(err)))
         .catch(err => console.log(err))
@@ -22,7 +42,7 @@ function exportToMOT(filename) {
         const w = square.width;
         const h = square.height;
 
-        result += `${frame}, ${id}, ${x}, ${y}, ${w}, ${h}, -1, -1, -1, -1\n`;
+        result += `${frame+1}, ${id}, ${x}, ${y}, ${w}, ${h}, -1, -1, -1, -1\n`;
     })
 
     fetch('/save_square', {

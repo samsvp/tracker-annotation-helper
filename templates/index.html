@@ -29,24 +29,10 @@
         var ctx = canvas.getContext('2d');
         var img = new Image();
         let mouseX, mouseY;
-        let frame = 1;
+        let frame = -1;
 
         let squares = { [frame]: [] };
-        fetch("/get_image", {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ frame: frame })
-        })
-            .then(res => res.blob()
-                .then(imageBlob => {
-                    const imageUrl = URL.createObjectURL(imageBlob);
-                    img.src = imageUrl;
-                    img.onload = function () {
-                        ctx.drawImage(img, 0, 0);
-                    };
-                })
-                .catch(err => console.log(err)))
-        .catch(err => console.log(err));
+        loadImage("next");
 
 
         const exportButton = document.querySelector('#export-mot');
@@ -56,18 +42,12 @@
 
         const nextImageButton = document.querySelector('#next-image');
         nextImageButton.addEventListener('click', () => {
-            if (!(++frame in squares)) {
-                squares[frame] = [];
-            }
             loadImage("next");
         });
 
 
         const prevImageButton = document.querySelector('#prev-image');
         prevImageButton.addEventListener('click', () => {
-            if (!(--frame in squares)) {
-                squares[frame] = [];
-            }
             loadImage("prev");
         });
 

@@ -4,11 +4,13 @@ class Square {
     }
 
     // get a random color
-    static getRandomColor() {
+    static getRandomColor(seed) {
         let letters = '0123456789ABCDEF';
         let color = '#';
+
         for (let i = 0; i < 6; i++) {
-            color += letters[Math.floor(Math.random() * 16)];
+            let r = Math.floor((Math.abs(Math.sin((seed + i)) * 43758.5453123) % 1) * 16);
+            color += letters[r];
         }
         return color;
     }
@@ -21,8 +23,8 @@ class Square {
         this.width = width;
         this.height = height;
         this.handleSize = Square.getHandleSize();
-        this.number = number ?? "-1";
-        this.color = Square.getRandomColor();
+        this.number = parseInt(number) ?? -1;
+        this.color = Square.getRandomColor(this.number);
 
         this.isDragging = false;
         this.isResizing = false;
@@ -30,6 +32,12 @@ class Square {
         this.resizeHandle = null;
         this.lastX = 0;
         this.lastY = 0;
+    }
+    
+
+    setNumber(number) {
+        this.number = parseInt(number);
+        this.color = Square.getRandomColor(this.number);
     }
 
 
