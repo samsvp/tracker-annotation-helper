@@ -1,8 +1,13 @@
 function getFrameData() {
-    fetch('/get_current_frame_data')
+    fetch('/get_current_frame_data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ use_sift: is_using_sift })
+    })
         .then(res => res.json()
             .then(json => {
                 frame = json.frame;
+                document.getElementById("curr-frame").innerHTML = frame;
                 if (!(frame in squares)) {
                     squares[frame] = json.squares.map(
                         s => {
@@ -53,26 +58,28 @@ function loadSelectedImage(frame) {
 function exportToMOT(filename) {
     let result = "";
 
-    squares[frame].forEach(square => {
+    Object.keys(squares).forEach(frame => squares[frame].forEach(square => {
         const id = square.number;
         const x = square.x;
         const y = square.y;
         const w = square.width;
         const h = square.height;
 
-        result += `${frame + 1}, ${id}, ${x}, ${y}, ${w}, ${h}, -1, -1, -1, -1\n`;
-    })
+        result += `${frame}, ${id}, ${x}, ${y}, ${w}, ${h}, -1, -1, -1, -1\n`;
+    }));
 
     fetch('/save_square', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-            squares: result,
-            filename: filename
+            squares: result
         })
     })
         .then(response => response.json()
-            .then(data => console.log(data))
+            .then(data => { 
+                console.log(data);
+                alert(data.msg)
+            })
             .catch(error => console.error(error)))
         .catch(error => console.error(error));
 }
