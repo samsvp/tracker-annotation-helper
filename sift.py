@@ -23,8 +23,8 @@ def find_perimeter(prev_image: np.ndarray, curr_image: np.ndarray,
                         "Tuple[float, float, float, float] | None":
     """Increases the detection box of the current frame and performs SIFT
     template matching"""
-    tx, ty, tw, th = int(prev_obj["bb_left"]), int(prev_obj["bb_top"]), \
-        int(prev_obj["bb_width"]), int(prev_obj["bb_height"])
+    tx, ty, tw, th = int(prev_obj["bb_left"]) - 4, int(prev_obj["bb_top"]) - 4, \
+        int(prev_obj["bb_width"]) + 2, int(prev_obj["bb_height"]) + 2
 
     target = prev_image[ty: ty+th, tx: tx+tw]
 
@@ -36,6 +36,7 @@ def find_perimeter(prev_image: np.ndarray, curr_image: np.ndarray,
 
     x2, y2 = int(x) + int(w) + offset_x, int(y) + int(h) + offset_y
     res = find_rect(target, curr_image[y1:y2, x1:x2], log_err=log_err)
+
     if res is None: return res
 
     ntx, nty, ntw, nth = res
@@ -90,33 +91,28 @@ def find_rect(target: np.ndarray, image: np.ndarray, log_err=False) -> \
 
 #%%
 if __name__ == "__main__":
-    img71 = cv2.imread("images/city_above_images/frame_71.jpg")
-    img72 = cv2.imread("images/city_above_images/frame_72.jpg")
+    img35 = cv2.imread("images/city_above_images/frame_35.jpg")
+    img36 = cv2.imread("images/city_above_images/frame_36.jpg")
     with open("mots/city_above_mot.txt") as f:
         mot_data = [[int(math.floor(float(n))) for n in line.split(",")]
                     for line in f.readlines()]
-        mot_data71 = [d for d in mot_data if d[0]==71]
-        mot_data72 = [d for d in mot_data if d[0]==72]
+        mot_data35 = [d for d in mot_data if d[0]==35]
+        mot_data36 = [d for d in mot_data if d[0]==36]
 
-    i = -1
-    x1, y1 = mot_data71[i][2] + 2, mot_data71[i][3] + 4
-    x2, y2 = mot_data71[i][2] + mot_data71[i][4] - 2, mot_data71[i][3] + mot_data71[i][5] - 2
+    i = 13
+    x1, y1 = mot_data35[i][2] - 4, mot_data35[i][3] - 4
+    x2, y2 = mot_data35[i][2] + mot_data35[i][4] + 2, mot_data35[i][3] + mot_data35[i][5] + 2
 
     prev_obj = {"bb_left": x1, "bb_top": y1,
                 "bb_width": x2 - x1, "bb_height": y2 - y1}
-    car = img71[y1:y2, x1:x2]
-    i = -2
+    car = img35[y1:y2, x1:x2]
 
-    x1, y1 = mot_data72[i][2] - 30, mot_data72[i][3] - 30
-    x2, y2 = mot_data72[i][2] + mot_data72[i][4] + 30, mot_data72[i][3] + mot_data72[i][5] + 30
+    curr_obj = prev_obj
+    car3 = img36[y1:y2, x1:x2]
 
-    curr_obj = {"bb_left": x1 + 30, "bb_top": y1 + 30,
-                "bb_width": x2 - x1 - 30, "bb_height": y2 - y1 - 30}
-    car3 = img72[y1:y2, x1:x2]
-
-    x, y, w, h = find_perimeter(img71, img72, prev_obj, curr_obj)
+    x, y, w, h = find_perimeter(img35, img36, prev_obj, curr_obj, log_err=True)
     #x, y, w, h = find_rect(car, car3)
-    plt.imshow(cv2.rectangle(img72.copy(), (int(x), int(y)), (int(x+w), int(y+h)), (0,0,0), 5))
+    plt.imshow(cv2.rectangle(img36.copy(), (int(x), int(y)), (int(x+w), int(y+h)), (0,0,0), 5))
 
 
 # %%

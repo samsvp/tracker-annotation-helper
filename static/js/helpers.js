@@ -2,7 +2,7 @@ function getFrameData() {
     fetch('/get_current_frame_data', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ use_sift: is_using_sift })
+        body: JSON.stringify({  })
     })
         .then(res => res.json()
             .then(json => {

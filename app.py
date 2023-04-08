@@ -7,14 +7,6 @@ from flask import Flask, render_template, send_file, request
 
 from typing import *
 
-try:
-    import sift
-    import cv2
-    CAN_USE_SIFT = 1
-except ModuleNotFoundError:
-    print("SIFT dependencies not match. Skipping")
-    CAN_USE_SIFT = 0
-
 
 app = Flask(__name__)
 
@@ -36,7 +28,7 @@ def home():
     bg_width, bg_height = bg_image.size
 
     # Render the template with the image dimensions
-    return render_template('index.html', CAN_USE_SIFT=CAN_USE_SIFT, 
+    return render_template('index.html',
                            frame_count=len(image_files),
                            img_filename=img_filename,
                            bg_width=bg_width, bg_height=bg_height)
@@ -67,52 +59,13 @@ def get_current_frame_data():
     global mot_data
 
     data = request.get_json()
-    use_sift = data["use_sift"]
 
     if frame not in mot_data:
         mot_data[frame] = []
 
-    if not use_sift or frame == 0:
-        return {"frame": frame,
-                "squares": mot_data[frame]}
+    return {"frame": frame,
+            "squares": mot_data[frame]}
 
-    else:
-        data = []
-        for obj in mot_data[frame - 1]:
-            next_obj = find_object_with_id(frame, obj["id"])
-            
-            prev_image = cv2.imread(image_files[frame - 1])
-            curr_image = cv2.imread(image_files[frame])
-            if not next_obj:
-                print(frame, obj["id"], "obj not found")
-                # search around for object
-                bbx, bby = obj["bb_left"] - 30, obj["bb_top"] - 30
-                if bbx < 0: bbx = 0
-                if bby < 0: bby = 0
-                pnext_obj = {"id": obj["id"], 
-                            "bb_left": bbx, "bb_top": bby,
-                            "bb_width": obj["bb_width"] + 30, 
-                            "bb_height": obj["bb_height"] + 30}
-                
-                res = sift.find_perimeter(
-                    prev_image, curr_image, obj, pnext_obj)
-            else:
-                res = sift.find_perimeter(
-                    prev_image, curr_image, obj, next_obj)
-            
-            if res is not None:
-                x, y, w, h = res
-                data.append({"id": obj["id"], "bb_left": x, "bb_top": y,
-                            "bb_width": w, "bb_height": h})
-                print(f"Added obj {obj['id']} on frame {frame}")
-            
-            # no matches found but we managed to get some detection
-            else:
-                print(frame, obj["id"], None)
-                if next_obj:
-                    data.append(next_obj)
-
-        return {"frame": frame, "squares": data}
 
 
 @app.route('/get_image', methods=["POST"])

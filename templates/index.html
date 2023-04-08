@@ -21,9 +21,6 @@
         <button id="next-image"> Next </button> <br><br>
         <button id="prev-image"> Prev </button> <br><br>
         <button id="select-image"> Select</button> <br><br>
-        {% if CAN_USE_SIFT %}
-            <button id="use-sift">Use SIFT</button> <br><br>
-        {% endif %}
     </div>
     <canvas id="myCanvas" width="{{ bg_width }}" height="{{ bg_height }}"></canvas>
 
@@ -35,8 +32,6 @@
         var img = new Image();
         let mouseX, mouseY;
         let frame = -1;
-        const CAN_USE_SIFT = {{ CAN_USE_SIFT }};
-        let is_using_sift = false;
 
         let squares = { [frame]: [] };
         loadImage("next");
@@ -71,13 +66,13 @@
             loadSelectedImage(parseInt(frame));
         });
 
-        if (CAN_USE_SIFT) {
-            const siftButton = document.querySelector('#use-sift');
-            siftButton.addEventListener('click', () => {
-                is_using_sift = !is_using_sift;
-                siftButton.innerHTML = is_using_sift ? "Disable SIFT" : "Use Sift";
-            });
-        }
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'n') {
+                loadImage('next');
+            } else if (event.key === 'p') {
+                loadImage('prev');
+            }
+        });
 
 
     </script>
