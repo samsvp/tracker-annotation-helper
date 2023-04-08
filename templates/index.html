@@ -19,6 +19,7 @@
         <button id="export-mot"> MOT </button> <br><br>
         <button id="next-image"> Next </button> <br><br>
         <button id="prev-image"> Prev </button> <br><br>
+        <button id="select-image"> Select</button> <br><br>
     </div>
     <canvas id="myCanvas" width="{{ bg_width }}" height="{{ bg_height }}"></canvas>
 
@@ -49,6 +50,19 @@
         const prevImageButton = document.querySelector('#prev-image');
         prevImageButton.addEventListener('click', () => {
             loadImage("prev");
+        });
+
+        const selectImageButton = document.querySelector('#select-image');
+        selectImageButton.addEventListener('click', () => {
+            let frame;
+            while (frame = prompt("Select frame number: ")) {
+                if (isNaN(frame)) {
+                    alert("Not a number");
+                } else {
+                    break;
+                }
+            }
+            loadSelectedImage(parseInt(frame));
         });
 
     </script>

@@ -1,21 +1,25 @@
+import os
+import re
 import csv
 import argparse
 from PIL import Image
 from flask import Flask, render_template, send_file, request
 
+from typing import * 
+
 
 app = Flask(__name__)
 
 frame = -1
-filenames = ['frame_1.jpg', 'frame_271.jpg', 'frame_272.jpg']
+image_files = ['sample_images/frame_1.jpg', 'sample_images/frame_271.jpg', 'sample_images/frame_272.jpg']
 mot_data = {}
 
 # Define the route for the home page
 @app.route('/')
 def home():
     # Load the background image
-    img_filename = filenames[frame]
-    bg_image = Image.open(f"sample_images/{img_filename}")
+    img_filename = image_files[frame]
+    bg_image = Image.open(img_filename)
 
     # Pass the image dimensions to the template
     bg_width, bg_height = bg_image.size
@@ -29,9 +33,9 @@ def next_image():
     global frame
 
     frame += 1
-    if frame >= len(filenames):
-        frame = len(filenames) - 1
-    return send_file(f"sample_images/{filenames[frame]}", mimetype='image/jpeg')
+    if frame >= len(image_files):
+        frame = len(image_files) - 1
+    return send_file(image_files[frame], mimetype='image/jpeg')
 
 
 @app.route('/prev_image')
@@ -41,11 +45,15 @@ def prev_image():
     frame -= 1
     if frame < 0:
         frame = 0
-    return send_file(f"sample_images/{filenames[frame]}", mimetype='image/jpeg')
+    return send_file(image_files[frame], mimetype='image/jpeg')
 
 
 @app.route('/get_current_frame_data')
 def get_current_frame_data():
+    global mot_data
+
+    if frame not in mot_data:
+        mot_data[frame] = []
     return {"frame": frame,
             "squares": mot_data[frame]}
 
@@ -53,15 +61,17 @@ def get_current_frame_data():
 
 @app.route('/get_image', methods=["POST"])
 def get_image():
+    global frame
+
     data = request.get_json()
     frame = data["frame"]
 
     if frame < 0:
         frame = 0
-    elif frame >= len(filenames):
-        frame = len(filenames) - 1
+    elif frame >= len(image_files):
+        frame = len(image_files) - 1
 
-    return send_file(f"sample_images/{filenames[frame]}", mimetype='image/jpeg')
+    return send_file(image_files[frame], mimetype='image/jpeg')
 
 
 @app.route('/save_square', methods=["POST"])
@@ -86,27 +96,53 @@ def save_squares():
 
 def load_mot_data(filename: str):
     mot_data = {}
+    
     with open(filename) as f:
         reader = csv.reader(f, delimiter=',')
         for row in reader:
             frame, id, bb_left, bb_top, bb_width, bb_height, _, _, _, _ = map(float, row)
             frame = frame - 1
+            
             if frame not in mot_data:
                 mot_data[frame] = []
+            
             mot_data[frame].append({
                 "id": id, "bb_left": bb_left, "bb_top": bb_top, 
                 "bb_width": bb_width, "bb_height": bb_height})
+            
     return mot_data
+
+
+def get_image_filepaths(folderpath: str) -> List[str]:
+
+    def natural_keys(text):
+        '''
+        alist.sort(key=natural_keys) sorts in human order
+        http://nedbatchelder.com/blog/200712/human_sorting.html
+        (See Toothy's implementation in the comments)
+        '''
+        return [ int(c) if c.isdigit() else c
+                 for c in re.split(r'(\d+)', text) ]
+    filenames = [os.path.join(folderpath, filename) 
+                 for filename in os.listdir(folderpath)]
+    
+    filenames.sort(key=natural_keys)
+    return filenames
+
 
 if __name__ == '__main__':
     # create an ArgumentParser object
     parser = argparse.ArgumentParser(description="Flask app that lets the user fix partial tracking annotations")
-    parser.add_argument('-f', '--filename', type=str, 
+    parser.add_argument('-m', '--mot_file', type=str, 
                         help='Name of the file with the partial detections (MOT format)')
+    parser.add_argument('-i', '--images', type=str,
+                        help="Folder containing the images related to the MOT file. The images must be \
+                            in the format *_d.{png/jpg}")
     args = parser.parse_args()
 
-    if args.filename is not None:
-        mot_data = load_mot_data(args.filename)
-        print(mot_data)
+    if args.mot_file is not None:
+        mot_data = load_mot_data(args.mot_file)
+    
+    image_files = get_image_filepaths(args.images)
 
     app.run(debug=True)
