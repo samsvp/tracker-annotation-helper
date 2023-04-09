@@ -41,6 +41,7 @@ canvas.addEventListener('mouseup', function (event) {
     squares[frame].forEach(square => {
         if (square.isResizing && square.number == "-1") {
             let ids = squares[frame].map(square => square.number);
+            let number;
             while (number = prompt("ID number: ")) {
                 if (isNaN(number)) {
                     alert("Not a number");
@@ -50,7 +51,11 @@ canvas.addEventListener('mouseup', function (event) {
                     break;
                 }
             }
-            square.setNumber(number);
+            if (number == null) {
+                alert("Operation Aborted");
+            } else {
+                square.setNumber(number);
+            }
             drawSquares();
         }
 

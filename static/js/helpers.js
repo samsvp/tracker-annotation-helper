@@ -115,3 +115,78 @@ function promptInt(message) {
     }
     return parseInt(number);
 }
+
+
+function median(values) {
+    if (values.length === 0) return 0;
+
+    values.sort(function (a, b) { return a - b; });
+
+    var half = Math.floor(values.length / 2);
+
+    if (values.length % 2)
+        return values[half];
+
+    return (values[half - 1] + values[half]) / 2.0;
+}
+
+
+function linearInterpolation1D(x1, x2, nPoints) {
+    let step = (x2 - x1) / (nPoints + 1);
+    return [...Array(nPoints).keys()].map(n => x1 + step * (n + 1));
+}
+
+
+function linearInterpolation(id) {
+    let matchedSquares = [];
+    let frames = [];
+    for (const f in squares) {
+        for (const square of squares[f]) {
+            if (square.number != id)
+                continue;
+
+            matchedSquares.push(square);
+            frames.push(parseInt(f));
+            break;
+        }
+    }
+
+    let newFrames = []
+    let newSquares = []
+    for (let i = 0; i < frames.length - 1; i++) {
+        newSquares.push(matchedSquares[i]);
+        newFrames.push(frames[i]);
+
+        let currFrame = frames[i]
+        let nextFrameN = frames[i + 1];
+        if (currFrame + 1 == nextFrameN)
+            continue;
+
+        let xs = matchedSquares.map(s => s.x);
+        let ys = matchedSquares.map(s => s.y);
+        let ix = linearInterpolation1D(xs[i], xs[i + 1], nextFrameN - currFrame);
+        let iy = linearInterpolation1D(ys[i], ys[i + 1], nextFrameN - currFrame);
+
+        let medianW = median(matchedSquares.map(s => s.width));
+        let medianH = median(matchedSquares.map(s => s.height));
+        for (let j = 0; j < ix.length; j++) {
+            let s = new Square(ix[j], iy[j], medianW, medianH, id);
+            newFrames.push((j + 1) + currFrame);
+            newSquares.push(s);
+        }
+    }
+
+    for (let i = 0; i < newFrames.length - 1; i++) {
+        let f = newFrames[i];
+        let found = false;
+        for (const square of squares[f]) {
+            if (square.number != id)
+                continue;
+            
+            found = true;
+            break;
+        }
+        if (found) continue;
+        squares[f].push(newSquares[i]);
+    }
+}
