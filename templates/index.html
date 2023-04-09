@@ -21,6 +21,8 @@
         <button id="next-image"> Next </button> <br><br>
         <button id="prev-image"> Prev </button> <br><br>
         <button id="select-image"> Select</button> <br><br>
+        <button id="delete-id"> Delete ID </button> <br><br>
+        <button id="replace-id"> Replace ID </button> <br><br>
     </div>
     <canvas id="myCanvas" width="{{ bg_width }}" height="{{ bg_height }}"></canvas>
 
@@ -33,7 +35,8 @@
         let mouseX, mouseY;
         let frame = -1;
 
-        let squares = { [frame]: [] };
+        let squares = {};
+        loadData();
         loadImage("next");
 
 
@@ -53,18 +56,61 @@
             loadImage("prev");
         });
 
+
         const selectImageButton = document.querySelector('#select-image');
         selectImageButton.addEventListener('click', () => {
-            let frame;
-            while (frame = prompt("Select frame number: ")) {
-                if (isNaN(frame)) {
-                    alert("Not a number");
-                } else {
-                    break;
+            let frame = promptInt("Select frame number: ");
+            loadSelectedImage(frame);
+        });
+
+
+        const deleteIDButton = document.querySelector('#delete-id');
+        deleteIDButton.addEventListener('click', () => {
+            let id = promptInt("Select ID to remove: ");
+            for (f in squares) {
+                let foundIdx = -1;
+                for (let i = 0; i < squares[f].length; i++) {
+                    if (squares[f][i].number == id) {
+                        foundIdx = i;
+                        break;
+                    }
+                }
+                if (foundIdx == -1) continue;
+                squares[f].splice(foundIdx, 1);
+            }
+            drawSquares();
+        });
+
+
+        const replaceIDButton = document.querySelector('#replace-id');
+        replaceIDButton.addEventListener('click', () => {
+            let oldId = promptInt("Select ID to replace: ");
+            let newId = promptInt("Replace ID to: ");
+            let newSquares = Object.assign(Object.create(Object.getPrototypeOf(squares)), squares);
+            for (f in squares) {
+                let foundOldIdx = -1;
+                let foundNewIdx = -1;
+                for (let i = 0; i < squares[f].length; i++) {
+                    if (squares[f][i].number == oldId) {
+                        foundOldIdx = i;
+                        newSquares[f][i].setNumber(newId);
+                    } else if (squares[f][i].number == newId) {
+                        foundNewIdx = i;
+                    }
+                }
+                if (foundNewIdx != -1 && foundOldIdx != -1) {
+                    let error_msg = `Replacement from id ${oldId} to ${newId} failed. 
+                    Found instance of both ids in frame ${f}`
+                    alert(error_msg);
+                    console.log(foundOldIdx, foundNewIdx);
+                    return;
                 }
             }
-            loadSelectedImage(parseInt(frame));
+            squares = newSquares;
+            drawSquares();
+            alert(`ID ${oldId} replaced to ${newId}`);
         });
+
 
         document.addEventListener('keydown', function (event) {
             if (event.key === 'n') {

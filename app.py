@@ -34,6 +34,11 @@ def home():
                            bg_width=bg_width, bg_height=bg_height)
 
 
+@app.route('/load_data')
+def load_data():
+    return mot_data
+
+
 @app.route('/next_image')
 def next_image():
     global frame
@@ -54,18 +59,9 @@ def prev_image():
     return send_file(image_files[frame], mimetype='image/jpeg')
 
 
-@app.route('/get_current_frame_data', methods=['POST'])
-def get_current_frame_data():
-    global mot_data
-
-    data = request.get_json()
-
-    if frame not in mot_data:
-        mot_data[frame] = []
-
-    return {"frame": frame,
-            "squares": mot_data[frame]}
-
+@app.route('/get_current_frame')
+def get_current_frame():
+    return {"frame": frame}
 
 
 @app.route('/get_image', methods=["POST"])
@@ -117,7 +113,7 @@ def load_mot_data(filename: str):
         for row in reader:
             frame, id, bb_left, bb_top, bb_width, bb_height, _, _, _, _ = map(
                 float, row)
-            frame = frame - 1
+            frame = int(frame - 1)
 
             if frame not in mot_data:
                 mot_data[frame] = []
