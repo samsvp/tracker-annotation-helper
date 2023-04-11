@@ -3,7 +3,7 @@ import re
 import csv
 import argparse
 from PIL import Image
-from flask import Flask, render_template, send_file, request
+from flask import Flask, render_template, send_file, request, jsonify
 
 from typing import *
 
@@ -36,7 +36,7 @@ def home():
 
 @app.route('/load_data')
 def load_data():
-    return mot_data
+    return jsonify(mot_data)
 
 
 @app.route('/next_image')
@@ -61,7 +61,7 @@ def prev_image():
 
 @app.route('/get_current_frame')
 def get_current_frame():
-    return {"frame": frame}
+    return jsonify({"frame": frame})
 
 
 @app.route('/get_image', methods=["POST"])
@@ -87,15 +87,15 @@ def save_squares():
         print(squares)
         with open(save_filename, "w") as f:
             f.write(squares)
-        return {
+        return jsonify({
             "status": "success",
             "msg": f"Frame {frame} data added"
-        }
+        })
     except Exception as e:
-        return {
+        return jsonify({
             "status": "failure",
             "msg": str(e)
-        }
+        })
 
 
 def find_object_with_id(frame: int, id: int) -> Dict[str, float]:
