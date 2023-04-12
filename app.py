@@ -39,26 +39,6 @@ def load_data():
     return jsonify(mot_data)
 
 
-@app.route('/next_image')
-def next_image():
-    global frame
-
-    frame += 1
-    if frame >= len(image_files):
-        frame = len(image_files) - 1
-    return send_file(image_files[frame], mimetype='image/jpeg')
-
-
-@app.route('/prev_image')
-def prev_image():
-    global frame
-
-    frame -= 1
-    if frame < 0:
-        frame = 0
-    return send_file(image_files[frame], mimetype='image/jpeg')
-
-
 @app.route('/get_current_frame')
 def get_current_frame():
     return jsonify({"frame": frame})

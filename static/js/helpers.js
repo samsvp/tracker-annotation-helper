@@ -33,16 +33,13 @@ function getFrameData() {
 
 
 function loadImage(nextOrPrev) {
-    fetch(`/${nextOrPrev}_image`)
-        .then(
-            res => res.blob()
-                .then(imageBlob => {
-                    const imageUrl = URL.createObjectURL(imageBlob);
-                    img.src = imageUrl;
-                    img.onload = getFrameData;
-                })
-                .catch(err => console.log(err)))
-        .catch(err => console.log(err))
+    if (nextOrPrev == "prev") {
+        return loadSelectedImage(frame - 1);
+    } else if (nextOrPrev == "next") {
+        return loadSelectedImage(frame + 1);
+    }
+
+    return;
 }
 
 
